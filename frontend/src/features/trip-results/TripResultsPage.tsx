@@ -70,16 +70,30 @@ function chipSx(variant: string) {
   return map[variant] ?? { bg: colors.surfaceAlt, color: colors.textSecondary };
 }
 
-function getStopTimelineData(s: Stop) {
-  const data: Record<string, { title: string; chip: string; time: string }> = {
-    pickup: { title: 'Pickup', chip: `${s.duration_hrs} hr on duty`, time: '7:00 - 8:00 AM' },
-    dropoff: { title: 'Dropoff', chip: `${s.duration_hrs} hr on duty`, time: '4:00 - 5:00 PM' },
-    fuel: { title: 'Fuel stop', chip: `${s.duration_hrs} hr on duty`, time: '10:45 - 11:00 AM' },
-    rest_break: { title: 'Required 30-minute break', chip: `30 min · 8 hrs cumulative driving`, time: '3:15 - 3:45 PM' },
-    sleeper_berth: { title: '10-hour rest (sleeper berth)', chip: `10 hrs · resets 11h / 14h clocks`, time: '6:45 PM - 4:45 AM (+1 day)' },
-    restart: { title: '34-hour restart', chip: `34 hrs · cycle reset`, time: 'Friday - Sunday' },
+function getStopTimelineData(s: Stop, timeText?: string) {
+  const data: Record<string, { title: string; chip: string }> = {
+    pickup: { title: 'Pickup', chip: `${s.duration_hrs} hr on duty` },
+    dropoff: { title: 'Dropoff', chip: `${s.duration_hrs} hr on duty` },
+    fuel: { title: 'Fuel stop', chip: `${s.duration_hrs} hr on duty` },
+    rest_break: { title: 'Required 30-minute break', chip: `30 min · 8 hrs cumulative driving` },
+    sleeper_berth: { title: '10-hour rest (sleeper berth)', chip: `10 hrs · resets 11h / 14h clocks` },
+    restart: { title: '34-hour restart', chip: `34 hrs · cycle reset` },
   };
-  return data[s.type] ?? { title: s.type, chip: `${s.duration_hrs} hr`, time: '' };
+  const base = data[s.type] ?? { title: s.type, chip: `${s.duration_hrs} hr` };
+  return { ...base, time: timeText };
+}
+
+function formatTimeRange(start: Date, end: Date): string {
+  const timeOpts: Intl.DateTimeFormatOptions = { hour: 'numeric', minute: '2-digit', hour12: true };
+  const startStr = start.toLocaleTimeString('en-US', timeOpts);
+  const endStr = end.toLocaleTimeString('en-US', timeOpts);
+  
+  const startDay = Math.floor(start.getTime() / 86400000 - start.getTimezoneOffset() / 1440);
+  const endDay = Math.floor(end.getTime() / 86400000 - end.getTimezoneOffset() / 1440);
+  const dayDiff = endDay - startDay;
+  const daySuffix = dayDiff > 0 ? ` (+${dayDiff} day${dayDiff > 1 ? 's' : ''})` : '';
+  
+  return `${startStr} - ${endStr}${daySuffix}`;
 }
 
 export default function TripResultsPage() {
@@ -140,10 +154,28 @@ export default function TripResultsPage() {
     // Fallback if stops somehow lack lat/lon
     const coords = (trip.route_geometry as any)?.coordinates ?? [];
     if (coords.length > 0) {
-      waypoints.push({ label: trip.current_location, lon: coords[0][0], lat: coords[0][1], type: 'current' });
+      waypoints.push({ label: trip.current_location, lon: coords[0][0], lat: coords[0][1], type: 'current' as any });
       waypoints.push({ label: trip.dropoff_location, lon: coords[coords.length-1][0], lat: coords[coords.length-1][1], type: 'dropoff' });
     }
   }
+
+  // Pre-calculate timestamps for stops
+  const AVG_SPEED_MPH = 55.0;
+  const tripStart = new Date(trip.created_at);
+  tripStart.setHours(6, 0, 0, 0); // Trip planner assumes 6 AM start
+
+  let cumulativeStopsHrs = 0;
+  const stopTimings = trip.stops.map((s) => {
+    const drivingHrs = (s.at_mile ?? 0) / AVG_SPEED_MPH;
+    const arrivalHrs = drivingHrs + cumulativeStopsHrs;
+    const departureHrs = arrivalHrs + s.duration_hrs;
+    
+    const arrivalDate = new Date(tripStart.getTime() + arrivalHrs * 3600000);
+    const departureDate = new Date(tripStart.getTime() + departureHrs * 3600000);
+    
+    cumulativeStopsHrs += s.duration_hrs;
+    return formatTimeRange(arrivalDate, departureDate);
+  });
 
   return (
     <Box>
@@ -246,13 +278,13 @@ export default function TripResultsPage() {
                   icon={<TripOriginOutlined sx={{ fontSize: 18 }} />} 
                   title="Depart current location" 
                   place={trip.current_location}
-                  timeText="Tue, Jul 21 · 6:00 AM"
+                  timeText={tripStart.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}
                   colorVariant="chip-blue"
                 />
                 {trip.stops.map((stop, i) => {
                   const isLast = i === trip.stops.length - 1;
                   const csColor = STOP_CHIP_COLOR[stop.type] ?? 'chip-grey';
-                  const tl = getStopTimelineData(stop);
+                  const tl = getStopTimelineData(stop, stopTimings[i]);
                   return (
                     <StopRow
                       key={stop.sequence}
