@@ -58,12 +58,14 @@ export default function LocationField({ icon, value, onChange, required, placeho
       inputValue={inputValue}
       onInputChange={(_, val) => setInputValue(val)}
       isOptionEqualToValue={(option, val) => option.label === val.label}
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          required={required}
-          placeholder={placeholder ?? 'Search city, address, or truck stop'}
-          sx={{ '& .MuiInputBase-root': { height: 46, borderRadius: '10px' } }}
+      renderInput={(params) => {
+        const { InputProps, inputProps, ...restParams } = params as any;
+        return (
+          <TextField
+            {...restParams}
+            required={required}
+            placeholder={placeholder ?? 'Search city, address, or truck stop'}
+            sx={{ '& .MuiInputBase-root': { height: 46, borderRadius: '10px' } }}
           slotProps={{
             ...((params as any).slotProps || {}),
             htmlInput: {
@@ -90,7 +92,8 @@ export default function LocationField({ icon, value, onChange, required, placeho
             }
           }}
         />
-      )}
+        );
+      }}
       renderOption={(props, option) => {
         const { key, ...rest } = props as React.HTMLAttributes<HTMLLIElement> & { key: string };
         return (
