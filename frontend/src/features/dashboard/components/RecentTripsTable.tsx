@@ -5,7 +5,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
-import Chip from '@mui/material/Chip';
+
 import Table from '@mui/material/Table';
 import TableHead from '@mui/material/TableHead';
 import TableBody from '@mui/material/TableBody';
@@ -20,13 +20,11 @@ import ListItemText from '@mui/material/ListItemText';
 import Divider from '@mui/material/Divider';
 import Skeleton from '@mui/material/Skeleton';
 import SearchOutlined from '@mui/icons-material/SearchOutlined';
-import FilterListOutlined from '@mui/icons-material/FilterListOutlined';
+
 import MoreVertOutlined from '@mui/icons-material/MoreVertOutlined';
 import VisibilityOutlined from '@mui/icons-material/VisibilityOutlined';
 import ArrowForwardOutlined from '@mui/icons-material/ArrowForwardOutlined';
-import DirectionsCarFilledOutlined from '@mui/icons-material/DirectionsCarFilledOutlined';
-import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
-import EventOutlined from '@mui/icons-material/EventOutlined';
+
 import { useNavigate } from 'react-router-dom';
 import { tripsApi } from '../../../shared/api/tripsApi';
 import { fontMono } from '../../../theme/typography';
@@ -38,7 +36,7 @@ import type { TripListItem } from '../../../types/trip';
 export default function RecentTripsTable() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
-  const [filterAnchorEl, setFilterAnchorEl] = useState<null | HTMLElement>(null);
+
   const [rowMenuState, setRowMenuState] = useState<{ el: HTMLElement; tripId: number } | null>(null);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);

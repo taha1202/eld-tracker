@@ -55,7 +55,7 @@ export default function TripPlannerPage() {
     });
   };
 
-  const isValid = Boolean(currentLocation && pickupLocation && dropoffLocation);
+  const isValid = Boolean(currentLocation && pickupLocation && dropoffLocation && cycleUsed !== '');
   
 
 
@@ -135,6 +135,7 @@ export default function TripPlannerPage() {
                   
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                   <TextField
+                    required
                     type="number"
                     value={cycleUsed}
                     onChange={(e) => {

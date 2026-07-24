@@ -36,12 +36,16 @@ export default function LocationField({ icon, value, onChange, required, placeho
   }, []);
 
   useEffect(() => {
+    if (value && inputValue === value.label) {
+      setLoading(false);
+      return;
+    }
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => fetchOptions(inputValue), 300);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [inputValue, fetchOptions]);
+  }, [inputValue, fetchOptions, value]);
 
   return (
     <Autocomplete
@@ -60,22 +64,30 @@ export default function LocationField({ icon, value, onChange, required, placeho
           required={required}
           placeholder={placeholder ?? 'Search city, address, or truck stop'}
           sx={{ '& .MuiInputBase-root': { height: 46, borderRadius: '10px' } }}
-          InputProps={{
-            ...params.InputProps,
-            startAdornment: (
-              <>
-                <InputAdornment position="start">
-                  {icon ?? <LocationOnOutlined sx={{ fontSize: 18 }} />}
-                </InputAdornment>
-                {params.InputProps?.startAdornment}
-              </>
-            ),
-            endAdornment: (
-              <>
-                {loading ? <CircularProgress size={16} /> : null}
-                {params.InputProps?.endAdornment}
-              </>
-            ),
+          slotProps={{
+            ...((params as any).slotProps || {}),
+            htmlInput: {
+              ...((params as any).inputProps || {}),
+              ...((params as any).slotProps?.htmlInput || {}),
+            },
+            input: {
+              ...((params as any).InputProps || {}),
+              ...((params as any).slotProps?.input || {}),
+              startAdornment: (
+                <>
+                  <InputAdornment position="start">
+                    {icon ?? <LocationOnOutlined sx={{ fontSize: 18 }} />}
+                  </InputAdornment>
+                  {((params as any).slotProps?.input?.startAdornment || (params as any).InputProps?.startAdornment)}
+                </>
+              ),
+              endAdornment: (
+                <>
+                  {loading ? <CircularProgress size={16} /> : null}
+                  {((params as any).slotProps?.input?.endAdornment || (params as any).InputProps?.endAdornment)}
+                </>
+              ),
+            }
           }}
         />
       )}
