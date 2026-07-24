@@ -1,12 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import MiniDrawer from './MiniDrawer';
 import TopBar from './TopBar';
 import { colors } from '../../theme/palette';
 
 export default function AppLayout() {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: colors.bg }}>
